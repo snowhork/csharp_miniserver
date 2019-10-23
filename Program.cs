@@ -2,63 +2,65 @@
 using System.Net;
 using System.Threading;
 using System.Text;
- 
+using System.Threading.Tasks;
+
 namespace SimpleWebServer
 {
     public class WebServer
-    {
-        private readonly HttpListener _listener = new HttpListener();
- 
-        public WebServer()
-        {
-            if (!HttpListener.IsSupported)
-                throw new NotSupportedException("Needs Windows XP SP2, Server 2003 or later.");
- 
-            _listener.Prefixes.Add("http://*:5000/");
-        }
- 
-        public void start()
-        {
-            Console.WriteLine("Start serever...");
-            _listener.Start();
-            for(;;)
-            {
-                HttpListenerContext ctx = _listener.GetContext();
-                new Thread(new Worker(ctx).ProcessRequest).Start();
-            }
-        }
-
-        public void Stop()
-        {
-            _listener.Stop();
-            _listener.Close();
-        }
-
-        static public void Main ()
+    {        
+        public static void Main ()
         {
             WebServer webServer = new WebServer();
-            webServer.start();
+            webServer.Start();
+        }
+        
+        private readonly HttpListener _listener = new HttpListener();
+ 
+        public void Start()
+        {
+            _listener.Prefixes.Add("http://*:5000/");            
+            _listener.Start();
+
+            Console.WriteLine("Launching server...");
+            while (true)
+            {
+                HttpListenerContext ctx = _listener.GetContext();
+                new Worker(ctx).ProcessRequest();
+            }
         }
     }
 
     public class Worker
     {
-        private HttpListenerContext context;
+        private readonly HttpListenerContext _context;
  
         public Worker(HttpListenerContext context)
         {
-            this.context = context;
+            _context = context;
         }
  
         public void ProcessRequest()
+        {   
+            LogContext();
+            WriteResponse("Hello World from C#!"); 
+        }
+
+        private void LogContext()
         {
-            StringBuilder sb = new StringBuilder();
-            sb.Append("Hello World from C#!");
- 
-            byte[] b = Encoding.UTF8.GetBytes(sb.ToString());
-            context.Response.ContentLength64 = b.Length;
-            context.Response.OutputStream.Write(b, 0, b.Length);
-            context.Response.OutputStream.Close();
+            Console.WriteLine(_context.Request.HttpMethod + ": " + _context.Request.RawUrl);
+            foreach (var key in _context.Request.Headers.AllKeys)
+            {
+                Console.WriteLine(key + ": " + _context.Request.Headers.Get(key));
+            }
+        } 
+
+        private void WriteResponse(string data)
+        {
+            byte[] b = Encoding.UTF8.GetBytes(data);
+            _context.Response.ContentLength64 = b.Length;
+            _context.Response.OutputStream.Write(b, 0, b.Length);
+            _context.Response.OutputStream.Close();
+            
         }
     }
 }
