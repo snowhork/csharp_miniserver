@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace SimpleWebServer
 {
     public class WebServer
-    {        
+    {
         public static void Main ()
         {
             WebServer webServer = new WebServer();
@@ -19,13 +19,14 @@ namespace SimpleWebServer
         public void Start()
         {
             _listener.Prefixes.Add("http://*:5000/");            
-            _listener.Start();
+            _listener.Start();           
 
             Console.WriteLine("Launching server...");
             while (true)
             {
                 HttpListenerContext ctx = _listener.GetContext();
-                new Worker(ctx).ProcessRequest();
+                var worker = new Worker(ctx);
+                Task.Run(() => worker.ProcessRequest());
             }
         }
     }
@@ -37,11 +38,11 @@ namespace SimpleWebServer
         public Worker(HttpListenerContext context)
         {
             _context = context;
+            LogContext();
         }
  
         public void ProcessRequest()
         {   
-            LogContext();
             WriteResponse("Hello World from C#!"); 
         }
 
