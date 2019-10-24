@@ -6,12 +6,11 @@ using System.Threading.Tasks;
 
 namespace SimpleWebServer
 {
-    public class WebServer
+    public class Dispatcher
     {
         public static void Main ()
         {
-            WebServer webServer = new WebServer();
-            webServer.Start();
+            new Dispatcher().Start();
         }
         
         private readonly HttpListener _listener = new HttpListener();
@@ -43,7 +42,7 @@ namespace SimpleWebServer
  
         public void ProcessRequest()
         {   
-            WriteResponse("Hello World from C#!"); 
+            WriteResponse("Cheese Hamburger! from " + _context.Request.Url); 
         }
 
         private void LogContext()
@@ -53,6 +52,7 @@ namespace SimpleWebServer
             {
                 Console.WriteLine(key + ": " + _context.Request.Headers.Get(key));
             }
+            Console.WriteLine();
         } 
 
         private void WriteResponse(string data)
